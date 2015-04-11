@@ -43,9 +43,7 @@ public class LessServer {
         String path = req.getRestOfPath();
         if (path.startsWith("/"))   path=path.substring(1);
 
-        // to prevent arbitrary class file leak to the browser, don't serve files unless they are LESS files.
-        if (!path.endsWith(".less.css"))
-            throw HttpResponses.notFound();
+        checkPath(path);
 
         File cache = getCache(path);
 
@@ -67,6 +65,12 @@ public class LessServer {
             expires*=365;   // static resources are unique, so we can set a long expiration date
 
         rsp.serveFile(req, cache.toURL(), expires);
+    }
+
+    protected void checkPath(String path) {
+        // to prevent arbitrary class file leak to the browser, don't serve files unless they are LESS files.
+        if (!path.endsWith(".less.css"))
+            throw HttpResponses.notFound();
     }
 
     private File getCache(String path) {
