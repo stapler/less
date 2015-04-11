@@ -19,12 +19,12 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class LessServer {
-    private final ClassLoader cl;
+    protected final ClassLoader cl;
 
     /**
      * Directory to store the generated CSS as cache.
      */
-    private final File cache;
+    protected final File cache;
 
     /**
      * Cache file we generate should have this timestamp, or else we need to regenerate the file.
