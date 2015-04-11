@@ -1,14 +1,13 @@
 package org.kohsuke.stapler.less;
 
+import org.kohsuke.stapler.assets.Asset;
 import org.kohsuke.stapler.assets.AssetLoader;
-import org.kohsuke.stapler.framework.io.IOException2;
 import org.lesscss.LessCompiler;
 import org.lesscss.LessException;
 import org.lesscss.LessSource;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
 /**
  * {@link AssetLoader} that serves LESS as compiled CSS.
@@ -40,29 +39,32 @@ public class LessLoader extends AssetLoader {
     }
 
     @Override
-    public URL load(String path) throws IOException {
+    public Asset load(String path) throws IOException {
         if (!path.endsWith(".less.css"))
             return null;
 
         File cache = getCache(path);
 
-        // if the cache is stale, regenerate it.
         // to prevent double compilation, lock by the request path
         synchronized (path.intern()) {
-            if (!cache.exists() || cache.lastModified() != timestamp) {
-                cache.getParentFile().mkdirs();
-                String src = path.substring(0, path.length() - 4);
-                try {
-                    COMPILER.get().compile(new LessSource(new ClasspathSource(cl, src)), cache);
-                } catch (LessException e) {
-                    throw new IOException("Failed to compile LESS to CSS: "+path,e);
-                }
-                cache.setLastModified(timestamp);
-                compileCount++;
+            File d = cache.getParentFile();
+            d.mkdirs();
+            File tmp = File.createTempFile("less","tmp",d);
+
+            String src = path.substring(0, path.length() - 4);
+            try {
+                COMPILER.get().compile(new LessSource(new ClasspathSource(cl, src)), tmp);
+            } catch (LessException e) {
+                throw new IOException("Failed to compile LESS to CSS: "+path,e);
             }
+            if (!tmp.renameTo(cache)) {
+                cache.delete();
+                tmp.renameTo(cache);
+            }
+            compileCount++;
         }
 
-        return cache.toURL();
+        return Asset.fromFile(cache);
     }
 
     private File getCache(String path) {
