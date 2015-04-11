@@ -48,10 +48,9 @@ public class AppTest extends JettyTestCase {
 
         // simulate the restart of the webapp that picks up the same cache dir that
         // contains old cached files. It should get recompiled again
-        init();
         new File(cache,"pkg/foo.less.css").setLastModified(System.currentTimeMillis() - 50000);
         assertThatWeFindExpectedContents(url);
-        assertEquals(1, more.compileCount);
+        assertEquals(3, more.compileCount);
     }
 
     private void init() {
