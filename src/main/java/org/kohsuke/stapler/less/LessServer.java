@@ -20,6 +20,10 @@ import java.io.IOException;
  */
 public class LessServer {
     private final ClassLoader cl;
+
+    /**
+     * Directory to store the generated CSS as cache.
+     */
     private final File cache;
 
     /**
@@ -45,12 +49,16 @@ public class LessServer {
 
         File cache = getCache(path);
 
-        if (!cache.exists() || cache.lastModified()!=timestamp) {
-            cache.getParentFile().mkdirs();
-            String src = path.substring(0, path.length() - 4);
-            COMPILER.get().compile(new LessSource(new ClasspathSource(cl, src)), cache);
-            cache.setLastModified(timestamp);
-            compileCount++;
+        // if the cache is stale, regenerate it.
+        // to prevent double compilation, lock by the request path
+        synchronized (path.intern()) {
+            if (!cache.exists() || cache.lastModified() != timestamp) {
+                cache.getParentFile().mkdirs();
+                String src = path.substring(0, path.length() - 4);
+                COMPILER.get().compile(new LessSource(new ClasspathSource(cl, src)), cache);
+                cache.setLastModified(timestamp);
+                compileCount++;
+            }
         }
 
         long expires = MetaClass.NO_CACHE ? 0 : 24L * 60 * 60 * 1000; /*1 day*/
