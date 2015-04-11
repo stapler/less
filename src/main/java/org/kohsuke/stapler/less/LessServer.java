@@ -21,11 +21,18 @@ import java.io.IOException;
 public class LessServer {
     private final ClassLoader cl;
     private final File cache;
-    private final long timestamp = System.currentTimeMillis();
+
+    /**
+     * Cache file we generate should have this timestamp, or else we need to regenerate the file.
+     */
+    private final long timestamp;
+
+    /*package for test*/ int compileCount;
 
     public LessServer(File cache, ClassLoader cl) {
         this.cl = cl;
         this.cache = cache;
+        timestamp = (System.currentTimeMillis()/2000)*2000;
     }
 
     public void doDynamic(StaplerRequest req,StaplerResponse rsp) throws IOException, LessException, ServletException {
@@ -42,6 +49,8 @@ public class LessServer {
             cache.getParentFile().mkdirs();
             String src = path.substring(0, path.length() - 4);
             COMPILER.get().compile(new LessSource(new ClasspathSource(cl, src)), cache);
+            cache.setLastModified(timestamp);
+            compileCount++;
         }
 
         long expires = MetaClass.NO_CACHE ? 0 : 24L * 60 * 60 * 1000; /*1 day*/
