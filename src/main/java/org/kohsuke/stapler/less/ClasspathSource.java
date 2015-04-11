@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class ClasspathSource implements Resource {
+class ClasspathSource implements Resource {
     private final ClassLoader cl;
     private final String path;
 

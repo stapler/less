@@ -2,6 +2,7 @@ package org.kohsuke.stapler.less;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.kohsuke.stapler.assets.AssetsManager;
 import org.kohsuke.stapler.test.JettyTestCase;
 
 import java.io.File;
@@ -12,16 +13,27 @@ import java.net.URL;
  * Unit test for simple App.
  */
 public class AppTest extends JettyTestCase {
-    public LessServer more;
+    public AssetsManager assets;
+    private LessLoader more;
+    private File cache;
 
-    public void testExclude() throws Exception {
-        File cache = File.createTempFile("cache", null);
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        cache = File.createTempFile("cache", null);
         cache.delete();
         cache.mkdirs();
+        init();
+    }
 
-        more = new LessServer(cache,getClass().getClassLoader());
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        FileUtils.deleteDirectory(cache);
+    }
 
-        URL url = new URL(this.url, "/more/pkg/foo.less.css");
+    public void testCompilation() throws Exception {
+        URL url = new URL(this.url, "/assets/pkg/foo.less.css");
         assertThatWeFindExpectedContents(url);
         assertEquals(1, more.compileCount);
 
@@ -34,10 +46,17 @@ public class AppTest extends JettyTestCase {
         assertThatWeFindExpectedContents(url);
         assertEquals(2, more.compileCount);
 
-        // mess with the timestamp and it should get recompiled again
-        new File(cache,"pkg/foo.less.css").setLastModified(System.currentTimeMillis()+50000);
+        // simulate the restart of the webapp that picks up the same cache dir that
+        // contains old cached files. It should get recompiled again
+        init();
+        new File(cache,"pkg/foo.less.css").setLastModified(System.currentTimeMillis() - 50000);
         assertThatWeFindExpectedContents(url);
-        assertEquals(3, more.compileCount);
+        assertEquals(1, more.compileCount);
+    }
+
+    private void init() {
+        more = new LessLoader(cache,getClass().getClassLoader());
+        assets = new AssetsManager("/assets",0, more);
     }
 
     private void assertThatWeFindExpectedContents(URL url) throws IOException {
