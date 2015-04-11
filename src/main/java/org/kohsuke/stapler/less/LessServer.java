@@ -1,4 +1,4 @@
-package less;
+package org.kohsuke.stapler.less;
 
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.MetaClass;

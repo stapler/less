@@ -1,4 +1,4 @@
-package less;
+package org.kohsuke.stapler.less;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -21,7 +21,7 @@ public class AppTest extends JettyTestCase {
         more = new LessServer(cache,getClass().getClassLoader());
 
         String contents = IOUtils.toString(new URL(url, "/more/pkg/foo.less.css").openStream());
-        System.out.println(contents);
+        assertTrue(contents.contains("color: red"));
 
         FileUtils.deleteDirectory(cache);
     }

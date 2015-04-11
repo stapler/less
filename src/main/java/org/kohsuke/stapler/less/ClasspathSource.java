@@ -1,4 +1,4 @@
-package less;
+package org.kohsuke.stapler.less;
 
 import org.lesscss.Resource;
 
@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 /**
  * @author Kohsuke Kawaguchi
